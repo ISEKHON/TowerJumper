@@ -35,12 +35,12 @@ export class InputManager {
 
   onPointerUp() {
     this.isDragging = false;
-    this.deltaX = 0; // Stop immediately when released
+    this.deltaX = 0;
   }
 
   getDeltaX() {
     // Return current deltaX and reset it
-    // This ensures rotation only happens when actively moving, not just holding
+    // Only rotates when actively moving, not when holding still
     const d = this.deltaX;
     this.deltaX = 0;
     return d;

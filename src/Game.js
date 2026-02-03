@@ -366,9 +366,8 @@ export class Game {
       // Add acceleration with device-specific sensitivity
       this.currentRotationVelocity += deltaX * this.rotationSpeed;
       
-      // Apply damping - much less on mobile for continuous rotation while holding
-      const damping = this.isMobile ? 0.98 : GAMEplay.rotationDamping;
-      this.currentRotationVelocity *= damping;
+      // Apply damping
+      this.currentRotationVelocity *= GAMEplay.rotationDamping;
       
       // Clamp with device-specific max speed
       this.currentRotationVelocity = clamp(
