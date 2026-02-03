@@ -997,6 +997,7 @@ button:active {
   height: 24px;
   stroke: white;
   stroke-width: 2.5; /* Thicker for visibility */
+  flex-shrink: 0;
 }
 
 /* Modern Menu Buttons */
@@ -1022,6 +1023,7 @@ button:active {
 .menu-btn svg {
   width: 24px; /* Larger icons */
   height: 24px;
+  flex-shrink: 0; /* Prevent icon crushing */
 }
 
 .menu-btn.primary {
@@ -1186,8 +1188,14 @@ button:active {
     .pause-button {
         top: 20px;
         right: 20px;
-        width: 48px;
-        height: 48px;
+        width: 50px; /* Kept consistent with desktop */
+        height: 50px;
+        min-width: 50px; /* Prevent squashing */
+        min-height: 50px;
+        padding: 0; /* Ensure no internal spacing */
+        border-radius: 50%; /* Force circle */
+        aspect-ratio: 1 / 1; /* Modern browser safety */
+        flex: 0 0 auto; /* Prevent flex resizing */
     }
     
     .menu-btn {
