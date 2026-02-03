@@ -321,17 +321,49 @@ export class Game {
       }
   }
 
+  loadProgress() {
+      try {
+          const saved = localStorage.getItem('helixTowerProgress');
+          if (saved) return JSON.parse(saved);
+      } catch (e) {
+          console.error('Failed to load progress', e);
+      }
+      return null;
+  }
+
+  saveProgress() {
+      try {
+          const data = {
+              level: this.tower.level,
+              score: this.score
+          };
+          localStorage.setItem('helixTowerProgress', JSON.stringify(data));
+      } catch (e) {
+          console.error('Failed to save progress', e);
+      }
+  }
+
   start() {
+    // defaults
     this.score = 0;
+    let startLevel = 1;
+    
+    // Load progress
+    const saved = this.loadProgress();
+    if (saved) {
+        this.score = saved.score || 0;
+        startLevel = saved.level || 1;
+    }
+
     this.combo = 0;
     this.comboTimer = 0;
     this.lastPlatformY = 0;
     this.isCompletingLevel = false;
     this.uiManager.updateScore(this.score);
-    this.uiManager.updateLevel(1);
+    this.uiManager.updateLevel(startLevel);
     this.uiManager.hideCombo();
     this.uiManager.resetStreak();
-    this.tower.generateLevel(1);
+    this.tower.generateLevel(startLevel);
     this.ball.reset();
     this.ball.mesh.visible = true; // Ensure ball is visible
     this.ballTrail.clear();
@@ -680,6 +712,9 @@ export class Game {
       
       // Bonus points
       this.addScore(bonusScore, true);
+      
+      // Save progress to localStorage
+      this.saveProgress();
       
       // Reset ball
       this.ball.body.position.y = 5;
