@@ -359,37 +359,15 @@ export class Game {
       this.uiManager.updateScore(this.score, animate);
   }
 
-  updatePhysics(dt) {
-      // Only update physics when game is running and not paused
-      if (!this.isRunning || this.isPaused) return;
+    updatePhysics(dt) {
+            // Only update physics when game is running and not paused
+            if (!this.isRunning || this.isPaused) return;
       
-      const isDragging = this.inputManager.getIsDragging();
+            // Simple, direct rotation: same behavior on PC and mobile
+            const deltaX = this.inputManager.getDeltaX();
+            this.tower.rotation += deltaX * this.rotationSpeed;
       
-      if (this.isMobile) {
-        // Mobile: Absolute position tracking
-        if (isDragging) {
-          const totalDrag = this.inputManager.getTotalDrag();
-          // Set rotation to base + total drag distance
-          this.tower.rotation = this.baseRotation + (totalDrag * 0.005);
-        } else {
-          // Save current rotation as base for next drag
-          this.baseRotation = this.tower.rotation;
-        }
-        this.currentRotationVelocity = 0;
-      } else {
-        // Desktop: Velocity-based rotation
-        const deltaX = this.inputManager.getDeltaX();
-        this.currentRotationVelocity += deltaX * this.rotationSpeed;
-        this.currentRotationVelocity *= GAMEplay.rotationDamping;
-        this.currentRotationVelocity = clamp(
-            this.currentRotationVelocity, 
-            -this.maxRotationSpeed, 
-            this.maxRotationSpeed
-        );
-        this.tower.rotation += this.currentRotationVelocity;
-      }
-      
-      this.tower.update(dt);
+            this.tower.update(dt);
       
       this.physicsManager.update(dt);
       this.ball.update();
