@@ -11,6 +11,10 @@ import { CameraController } from './utils/CameraController.js';
 import { TYPE } from './objects/Platform.js';
 import { PHYSICS, GAMEplay, COLORS } from './constants.js';
 import { lerp, clamp } from './utils/math.js';
+import bounceSoundSrc from './sounds/bounce.ogg';
+import dieSoundSrc from './sounds/die.ogg';
+import explosionSoundSrc from './sounds/explosion.ogg';
+import bigExplosionSoundSrc from './sounds/big_explosion.ogg';
 
 export class Game {
   constructor() {
@@ -18,7 +22,22 @@ export class Game {
     this.score = 0;
     this.highScore = 0;
     this.isRunning = false;
+    
+    // Audio
+    this.bounceSound = new Audio(bounceSoundSrc);
+    this.bounceSound.volume = 0.4;
+    
+    this.dieSound = new Audio(dieSoundSrc);
+    this.dieSound.volume = 0.5;
+    
+    this.explosionSound = new Audio(explosionSoundSrc);
+    this.explosionSound.volume = 0.5;
+    
+    this.bigExplosionSound = new Audio(bigExplosionSoundSrc);
+    this.bigExplosionSound.volume = 0.6;
+
     this.isPaused = false;
+
     this.combo = 0;
     this.comboTimer = 0;
     this.lastPlatformY = 0;
@@ -171,6 +190,12 @@ export class Game {
       if (body.userData.parentPlatform && body.userData.parentPlatform.isFinish) {
           const theme = this.tower.theme;
           
+          // Play big explosion sound on finish
+          if (this.bigExplosionSound) {
+              this.bigExplosionSound.currentTime = 0;
+              this.bigExplosionSound.play().catch(e => {});
+          }
+
           // Epic finish platform destruction
           this.particleManager.createImpactBurst(
               this.ball.mesh.position, 
@@ -201,6 +226,12 @@ export class Game {
           
           // Destroy the platform regardless of type
           if (body.userData.parentPlatform) {
+              // Play big explosion sound
+              if (this.bigExplosionSound) {
+                  this.bigExplosionSound.currentTime = 0;
+                  this.bigExplosionSound.play().catch(e => {});
+              }
+
               // Massive explosion
               this.particleManager.createImpactBurst(
                   this.ball.mesh.position, 
@@ -249,6 +280,13 @@ export class Game {
               // Fireball destroys platform
               this.ball.body.velocity.y = Math.min(bounceVelocity, GAMEplay.maxBounceForce);
               this.addScore(20, true);
+              
+              // Play big explosion sound
+              if (this.bigExplosionSound) {
+                  this.bigExplosionSound.currentTime = 0;
+                  this.bigExplosionSound.play().catch(e => {});
+              }
+
               // Visual feedback
               const theme = this.tower.theme;
               this.particleManager.createImpactBurst(this.ball.mesh.position, theme.danger, 20);
@@ -261,6 +299,12 @@ export class Game {
           this.particleManager.createBallBurst(this.ball.mesh.position, theme.danger || COLORS.ball);
           this.cameraController.shake(0.3, 0.3);
           
+          // Play die sound
+          if (this.dieSound) {
+              this.dieSound.currentTime = 0;
+              this.dieSound.play().catch(e => {});
+          }
+
           // Hide ball briefly before game over
           this.ball.mesh.visible = false;
           this.ball.body.velocity.set(0, 0, 0);
@@ -273,6 +317,23 @@ export class Game {
           return; // Don't continue processing
       } else {
           // Safe platform - ALWAYS bounce with guaranteed upward velocity
+          // Play bounce sound
+          if (this.bounceSound) {
+              this.bounceSound.currentTime = 0;
+              this.bounceSound.play().catch(e => {});
+          }
+           
+           // Check if landing on this platform for the first time
+        //    if (body.userData.parentPlatform && !body.userData.parentPlatform.hasLanded) {
+        //       body.userData.parentPlatform.hasLanded = true;
+              
+        //       // Play splash/explosion sound for first landing
+        //       if (this.explosionSound) {
+        //           this.explosionSound.currentTime = 0;
+        //           this.explosionSound.play().catch(e => {});
+        //       }
+        //   }
+
           // Force velocity to ensure bounce even if physics simulation had dampened it
           const newVelocity = Math.max(bounceVelocity, this.ball.body.velocity.y + bounceVelocity);
           // Clamp to maximum to prevent excessive bouncing
@@ -456,6 +517,14 @@ export class Game {
               
               const theme = this.tower.theme;
               
+              // Play pass sound (explosion)
+              if (this.explosionSound) {
+                  // Clone buffer for overlapping sounds if needed, or simple reset
+                  const sound = this.explosionSound.cloneNode(); 
+                  sound.volume = 0.3; // Slightly quieter for pass
+                  sound.play().catch(e => {});
+              }
+
               // Small burst effect when passing through gaps
               const burstPos = new THREE.Vector3(0, p.y, 0);
               this.particleManager.createImpactBurst(
