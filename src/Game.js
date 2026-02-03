@@ -27,6 +27,10 @@ export class Game {
     this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     this.isLowEnd = this.isMobile || navigator.hardwareConcurrency <= 4;
     
+    // Device-specific rotation sensitivity
+    this.rotationSpeed = this.isMobile ? 0.012 : 0.003; // Higher on mobile, lower on PC
+    this.maxRotationSpeed = this.isMobile ? 0.25 : 0.12; // Higher max on mobile
+    
     this.initThree();
     this.initPhysics();
     this.initGameObjects();
@@ -354,17 +358,17 @@ export class Game {
       // Rotate Tower based on input
       const deltaX = this.inputManager.getDeltaX();
       
-      // Add acceleration
-      this.currentRotationVelocity += deltaX * GAMEplay.rotationSpeed;
+      // Add acceleration with device-specific sensitivity
+      this.currentRotationVelocity += deltaX * this.rotationSpeed;
       
       // Apply damping
       this.currentRotationVelocity *= GAMEplay.rotationDamping;
       
-      // Clamp
+      // Clamp with device-specific max speed
       this.currentRotationVelocity = clamp(
           this.currentRotationVelocity, 
-          -GAMEplay.maxRotationSpeed, 
-          GAMEplay.maxRotationSpeed
+          -this.maxRotationSpeed, 
+          this.maxRotationSpeed
       );
       
       this.tower.rotation += this.currentRotationVelocity;
