@@ -184,6 +184,9 @@ export class Game {
               // Bonus points for destroying platform
               this.addScore(50 * this.ball.consecutivePasses, true);
               
+              // Show smash notification
+              this.uiManager.showNotification(`💥 SMASH! ${this.ball.consecutivePasses}x`, '#ff6600', 1500);
+              
               // RESET combo after using the smash power!
               this.ball.consecutivePasses = 0;
               this.combo = 0;
@@ -281,6 +284,7 @@ export class Game {
           
           // Reset consecutive passes (combo is for passing through, not bouncing)
           this.ball.consecutivePasses = 0;
+          this.uiManager.resetStreak();
       }
   }
 
@@ -408,6 +412,7 @@ export class Game {
                       this.ball.consecutivePasses, 
                       this.ball.consecutivePasses * 10
                   );
+                  this.uiManager.updateStreak(this.ball.consecutivePasses);
               }
               
               // Base points
@@ -616,18 +621,26 @@ export class Game {
       this.isCompletingLevel = true;
       
       // Level completion logic
-      const nextLevel = this.tower.level + 1;
+      const currentLevel = this.tower.level;
+      const nextLevel = currentLevel + 1;
+      const bonusScore = 100 * nextLevel;
+      
+      // Show level complete animation
+      this.uiManager.showLevelComplete(nextLevel, bonusScore);
+      
+      // Generate next level
       this.tower.generateLevel(nextLevel);
       this.uiManager.updateLevel(nextLevel);
       
       // Bonus points
-      this.addScore(100 * nextLevel, true);
+      this.addScore(bonusScore, true);
       
       // Reset ball
       this.ball.body.position.y = 5;
       this.ball.body.velocity.set(0, 0, 0);
       this.ball.consecutivePasses = 0;
       this.combo = 0;
+      this.uiManager.resetStreak();
       
       // Reset flag after a delay
       setTimeout(() => {

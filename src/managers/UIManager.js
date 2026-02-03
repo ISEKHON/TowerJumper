@@ -10,10 +10,17 @@ export class UIManager {
     this.gameOverScreen = document.getElementById('game-over-screen');
     this.finalScoreEl = document.getElementById('final-score');
     this.finalLevelEl = document.getElementById('final-level');
+    this.notificationEl = document.getElementById('notification');
+    this.streakEl = document.getElementById('streak-container');
+    this.levelCompleteEl = document.getElementById('level-complete');
     
     // Load high score
     this.highScore = parseInt(localStorage.getItem('towerJumpHighScore') || '0');
     this.updateHighScore(this.highScore);
+    
+    // Track streak
+    this.currentStreak = 0;
+    this.maxStreak = 0;
     
     document.getElementById('start-btn').addEventListener('click', () => {
        this.game.start();
@@ -49,6 +56,59 @@ export class UIManager {
 
   updateLevel(level) {
     this.levelEl.innerText = `Level ${level}`;
+    
+    // Pulse animation on level change
+    this.levelEl.classList.remove('level-pulse');
+    void this.levelEl.offsetWidth;
+    this.levelEl.classList.add('level-pulse');
+  }
+
+  showNotification(message, color = '#ffaa00', duration = 2000) {
+    if (!this.notificationEl) return;
+    
+    this.notificationEl.innerText = message;
+    this.notificationEl.style.color = color;
+    this.notificationEl.style.textShadow = `0 0 15px ${color}aa`;
+    this.notificationEl.classList.add('active');
+    
+    setTimeout(() => {
+      this.notificationEl.classList.remove('active');
+    }, duration);
+  }
+
+  updateStreak(streak) {
+    this.currentStreak = streak;
+    if (streak > this.maxStreak) {
+      this.maxStreak = streak;
+    }
+    
+    if (streak >= 3) {
+      this.streakEl.innerText = `🔥 ${streak} Streak!`;
+      this.streakEl.classList.add('active');
+    } else {
+      this.streakEl.classList.remove('active');
+    }
+  }
+
+  resetStreak() {
+    this.currentStreak = 0;
+    this.streakEl.classList.remove('active');
+  }
+
+  showLevelComplete(level, score) {
+    if (!this.levelCompleteEl) return;
+    
+    const levelText = this.levelCompleteEl.querySelector('.level-number');
+    const scoreText = this.levelCompleteEl.querySelector('.level-score');
+    
+    if (levelText) levelText.innerText = `Level ${level - 1} Complete!`;
+    if (scoreText) scoreText.innerText = `+${score} Points`;
+    
+    this.levelCompleteEl.classList.add('active');
+    
+    setTimeout(() => {
+      this.levelCompleteEl.classList.remove('active');
+    }, 2000);
   }
 
   showCombo(combo, multiplier) {
@@ -80,6 +140,25 @@ export class UIManager {
   showGameOver(score, level) {
     this.finalScoreEl.innerText = `Score: ${score}`;
     this.finalLevelEl.innerText = `Level: ${level}`;
+    
+    // Update high score display
+    const highScoreDisplay = document.getElementById('final-high-score');
+    if (highScoreDisplay) {
+      highScoreDisplay.innerText = `Best: ${this.highScore}`;
+    }
+    
+    // Show max streak
+    const streakDisplay = document.getElementById('final-streak');
+    if (streakDisplay && this.maxStreak > 0) {
+      streakDisplay.innerText = `Max Streak: ${this.maxStreak}`;
+      streakDisplay.style.display = 'block';
+    }
+    
+    // New high score celebration
+    if (score === this.highScore && score > 0) {
+      this.showNotification('🏆 NEW HIGH SCORE!', '#ffdd00', 3000);
+    }
+    
     this.gameOverScreen.classList.remove('hidden');
   }
 
