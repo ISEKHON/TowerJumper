@@ -364,25 +364,23 @@ export class Game {
       const deltaX = this.inputManager.getDeltaX();
       const isDragging = this.inputManager.getIsDragging();
       
-      if (this.isMobile && isDragging) {
-        // Direct rotation on mobile - no velocity accumulation
-        // Rotate directly based on drag amount for immediate response
-        this.tower.rotation += deltaX * this.rotationSpeed * 5; // Multiply for more direct control
-        this.currentRotationVelocity = 0; // Reset velocity for clean direct control
+      if (this.isMobile) {
+        // Mobile: Direct rotation tracking finger - NO VELOCITY, NO MOMENTUM
+        if (isDragging && deltaX !== 0) {
+          // Rotate directly with finger movement - simple and immediate
+          this.tower.rotation += deltaX * 0.01;
+        }
+        // When not dragging or no movement, do nothing - tower stays put
+        this.currentRotationVelocity = 0;
       } else {
-        // Desktop or not dragging - use smooth velocity-based rotation
+        // Desktop: Smooth velocity-based rotation
         this.currentRotationVelocity += deltaX * this.rotationSpeed;
-        
-        // Apply damping
         this.currentRotationVelocity *= GAMEplay.rotationDamping;
-        
-        // Clamp with device-specific max speed
         this.currentRotationVelocity = clamp(
             this.currentRotationVelocity, 
             -this.maxRotationSpeed, 
             this.maxRotationSpeed
         );
-        
         this.tower.rotation += this.currentRotationVelocity;
       }
       

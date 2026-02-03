@@ -2,6 +2,8 @@ export class InputManager {
   constructor(domElement) {
     this.domElement = domElement;
     this.isDragging = false;
+    this.startX = 0;
+    this.currentX = 0;
     this.previousX = 0;
     this.deltaX = 0;
     
@@ -21,6 +23,8 @@ export class InputManager {
 
   onPointerDown(event) {
     this.isDragging = true;
+    this.startX = event.clientX;
+    this.currentX = event.clientX;
     this.previousX = event.clientX;
     this.deltaX = 0;
   }
@@ -28,9 +32,9 @@ export class InputManager {
   onPointerMove(event) {
     if (!this.isDragging) return;
     
-    const currentX = event.clientX;
-    this.deltaX = currentX - this.previousX;
-    this.previousX = currentX;
+    this.previousX = this.currentX;
+    this.currentX = event.clientX;
+    this.deltaX = this.currentX - this.previousX;
   }
 
   onPointerUp() {
@@ -39,11 +43,7 @@ export class InputManager {
   }
 
   getDeltaX() {
-    // Return current deltaX and reset it
-    // Only rotates when actively moving, not when holding still
-    const d = this.deltaX;
-    this.deltaX = 0;
-    return d;
+    return this.deltaX;
   }
 
   getIsDragging() {
