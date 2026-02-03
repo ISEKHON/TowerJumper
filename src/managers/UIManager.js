@@ -75,8 +75,8 @@ export class UIManager {
     
     // Apply to game
     if (this.game.isMobile) {
-      this.game.rotationSpeed = (this.settings.rotationSensitivity / 10) * 0.012;
-      this.game.maxRotationSpeed = (this.settings.maxRotationSpeed / 15) * 0.25;
+      this.game.rotationSpeed = (this.settings.rotationSensitivity / 10) * 0.08;
+      this.game.maxRotationSpeed = (this.settings.maxRotationSpeed / 15) * 0.5;
     } else {
       this.game.rotationSpeed = (this.settings.rotationSensitivity / 10) * 0.003;
       this.game.maxRotationSpeed = (this.settings.maxRotationSpeed / 15) * 0.12;
