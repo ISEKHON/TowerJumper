@@ -10,8 +10,12 @@ export class Ball {
     this.squashAmount = 0; // For impact animation
     this.squashRecovery = 0; // Recovery speed
     
-    // Mesh
-    const geometry = new THREE.SphereGeometry(this.radius, 32, 32);
+    // Device detection for performance
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Mesh with adaptive detail
+    const segments = this.isMobile ? 16 : 32; // Lower poly on mobile
+    const geometry = new THREE.SphereGeometry(this.radius, segments, segments);
     const material = new THREE.MeshStandardMaterial({ 
       color: COLORS.ball,
       emissive: COLORS.ball,
@@ -21,7 +25,7 @@ export class Ball {
       envMapIntensity: 1.0
     });
     this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.castShadow = true;
+    this.mesh.castShadow = !this.isMobile; // Disable shadow on mobile for performance
     this.mesh.receiveShadow = false;
     this.mesh.position.set(position.x, position.y, position.z + 2.5); // Center on platform
     scene.add(this.mesh);

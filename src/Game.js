@@ -23,6 +23,10 @@ export class Game {
     this.lastPlatformY = 0;
     this.isCompletingLevel = false; // Prevent multiple level completions
     
+    // Detect device capabilities for performance optimization
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    this.isLowEnd = this.isMobile || navigator.hardwareConcurrency <= 4;
+    
     this.initThree();
     this.initPhysics();
     this.initGameObjects();
@@ -31,6 +35,9 @@ export class Game {
     
     this.currentRotationVelocity = 0;
     this.lastTime = performance.now();
+    this.frameCount = 0;
+    this.physicsAccumulator = 0;
+    this.fixedTimeStep = 1 / 120; // 120 FPS physics for smoothness
 
     this.animate = this.animate.bind(this);
     requestAnimationFrame(this.animate);
@@ -48,24 +55,36 @@ export class Game {
     
     this.renderer = new THREE.WebGLRenderer({ 
         canvas: document.getElementById('game-canvas'), 
-        antialias: true 
+        antialias: !this.isMobile, // Disable AA on mobile for performance
+        powerPreference: 'high-performance',
+        stencil: false,
+        depth: true
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Performance optimization
+    // Adaptive pixel ratio for performance
+    const pixelRatio = this.isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2);
+    this.renderer.setPixelRatio(pixelRatio);
+    
+    // Optimize shadow quality based on device
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = this.isLowEnd ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
     this.renderer.shadowMap.autoUpdate = true;
+    
+    // Additional renderer optimizations
+    this.renderer.sortObjects = false; // Disable sorting for performance
 
     // Clean, atmospheric lighting
     const ambientLight = new THREE.AmbientLight(0x404040, 0.8);
     this.scene.add(ambientLight);
 
-    // Main light
+    // Main light with adaptive shadow quality
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
     dirLight.position.set(8, 15, 5);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
+    // Lower shadow resolution on mobile/low-end devices
+    const shadowMapSize = this.isLowEnd ? 1024 : 2048;
+    dirLight.shadow.mapSize.width = shadowMapSize;
+    dirLight.shadow.mapSize.height = shadowMapSize;
     dirLight.shadow.camera.near = 0.5;
     dirLight.shadow.camera.far = 50;
     dirLight.shadow.camera.left = -15;
@@ -295,11 +314,14 @@ export class Game {
     this.combo = 0;
     this.comboTimer = 0;
     this.lastPlatformY = 0;
+    this.isCompletingLevel = false;
     this.uiManager.updateScore(this.score);
     this.uiManager.updateLevel(1);
     this.uiManager.hideCombo();
+    this.uiManager.resetStreak();
     this.tower.generateLevel(1);
     this.ball.reset();
+    this.ball.mesh.visible = true; // Ensure ball is visible
     this.ballTrail.clear();
     
     // Reset Tower rotation
@@ -326,6 +348,9 @@ export class Game {
   }
 
   updatePhysics(dt) {
+      // Only update physics when game is running
+      if (!this.isRunning) return;
+      
       // Rotate Tower based on input
       const deltaX = this.inputManager.getDeltaX();
       
@@ -451,10 +476,19 @@ export class Game {
   animate(time) {
     requestAnimationFrame(this.animate);
 
-    const dt = (time - this.lastTime) / 1000 || 0.016;
+    const dt = Math.min((time - this.lastTime) / 1000, 0.1); // Cap dt to prevent spiral of death
     this.lastTime = time;
 
-    this.updatePhysics(dt);
+    // Fixed timestep physics for consistent simulation
+    this.physicsAccumulator += dt;
+    
+    // Run physics at fixed 120 FPS for smoothness
+    while (this.physicsAccumulator >= this.fixedTimeStep) {
+      this.updatePhysics(this.fixedTimeStep);
+      this.physicsAccumulator -= this.fixedTimeStep;
+    }
+    
+    // Update game logic and visuals at render framerate
     this.updateGameLogic();
     this.updateCamera();
     
@@ -465,6 +499,9 @@ export class Game {
     this.particleManager.update(dt);
 
     this.renderer.render(this.scene, this.camera);
+    
+    // Performance monitoring (optional, can comment out in production)
+    this.frameCount++;
   }
 
   updateTheme(theme) {

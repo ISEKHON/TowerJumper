@@ -22,6 +22,9 @@ export class Platform {
     
     // Actually, usually in Helix Jump, the ball is at a fixed radius from center, and the tower spins.
     
+    // Device detection for performance optimization
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
     this.physicsManager = physicsManager;
     this.scene = scene;
     this.group = new THREE.Group();
@@ -69,7 +72,7 @@ export class Platform {
       const extrudeSettings = {
         depth: thickness,
         bevelEnabled: false,
-        curveSegments: 6 // Low poly for performance
+        curveSegments: this.isMobile ? 3 : 6 // Lower detail on mobile for performance
       };
       
       const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);

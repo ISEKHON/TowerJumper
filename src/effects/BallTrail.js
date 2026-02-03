@@ -5,7 +5,12 @@ export class BallTrail {
   constructor(scene, color = 0xff0055) {
     this.scene = scene;
     this.positions = [];
-    this.maxLength = VISUAL.trailLength;
+    
+    // Device detection for performance
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Reduce trail length on mobile for better performance
+    this.maxLength = this.isMobile ? Math.floor(VISUAL.trailLength * 0.5) : VISUAL.trailLength;
     
     // Create line geometry
     const geometry = new THREE.BufferGeometry();
@@ -15,7 +20,7 @@ export class BallTrail {
     const material = new THREE.LineBasicMaterial({
       color: color,
       transparent: true,
-      opacity: 0.6,
+      opacity: this.isMobile ? 0.4 : 0.6, // Lighter on mobile
       linewidth: 2
     });
     

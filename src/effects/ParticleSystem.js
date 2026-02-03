@@ -9,14 +9,22 @@ export class ParticleManager {
     this.activeParticles = [];
     this.splatters = []; // Track splatters for cleanup
     
-    // Create particle pool for bursts
+    // Detect mobile for performance optimization
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Create particle pool for bursts - reduced on mobile
     this.particlePool = [];
-    this.createParticlePool(80); // Increased for burst effects
+    const poolSize = this.isMobile ? 40 : 80; // Half size on mobile
+    this.createParticlePool(poolSize);
   }
 
   createParticlePool(count) {
+    // Use simpler geometry on mobile
+    const geometry = this.isMobile ? 
+      new THREE.SphereGeometry(0.12, 4, 4) : // Low poly on mobile
+      new THREE.SphereGeometry(0.12, 8, 8);  // Normal quality on desktop
+    
     for (let i = 0; i < count; i++) {
-      const geometry = new THREE.SphereGeometry(0.12, 8, 8);
       const material = new THREE.MeshStandardMaterial({ 
         color: 0xffffff, 
         transparent: true,
@@ -28,7 +36,8 @@ export class ParticleManager {
       });
       const particle = new THREE.Mesh(geometry, material);
       particle.visible = false;
-      particle.castShadow = false;
+      particle.castShadow = false; // Disable shadows for particles
+      particle.receiveShadow = false;
       this.scene.add(particle);
       this.particlePool.push({
         mesh: particle,
@@ -45,7 +54,7 @@ export class ParticleManager {
     
     // Main splatter blob
     const mainSize = randomRange(0.3, 0.6);
-    const segments = 32;
+    const segments = this.isMobile ? 16 : 32; // Lower detail on mobile
     const geometry = new THREE.CircleGeometry(mainSize, segments);
     
     // Deform the circle to make it organic
@@ -72,11 +81,12 @@ export class ParticleManager {
     mainSplat.rotation.z = Math.random() * Math.PI * 2;
     splatterGroup.add(mainSplat);
     
-    // Add smaller droplets around main splatter
-    const dropletCount = Math.floor(randomRange(3, 7));
+    // Add smaller droplets around main splatter - fewer on mobile
+    const dropletCount = this.isMobile ? Math.floor(randomRange(2, 4)) : Math.floor(randomRange(3, 7));
     for (let i = 0; i < dropletCount; i++) {
       const dropletSize = randomRange(0.08, 0.15);
-      const dropletGeo = new THREE.CircleGeometry(dropletSize, 16);
+      const dropletSegments = this.isMobile ? 8 : 16;
+      const dropletGeo = new THREE.CircleGeometry(dropletSize, dropletSegments);
       const dropletMat = new THREE.MeshBasicMaterial({ 
         color: color, 
         transparent: true, 
@@ -109,8 +119,9 @@ export class ParticleManager {
     platformGroup.add(splatterGroup);
     this.splatters.push(splatterGroup);
     
-    // Limit splatter count for performance
-    if (this.splatters.length > 30) {
+    // Limit splatter count for performance - lower on mobile
+    const maxSplatters = this.isMobile ? 15 : 30;
+    if (this.splatters.length > maxSplatters) {
       const oldSplatter = this.splatters.shift();
       if (oldSplatter.parent) {
         oldSplatter.parent.remove(oldSplatter);
@@ -119,9 +130,12 @@ export class ParticleManager {
   }
 
   createImpactBurst(position, color = 0xff0055, count = VISUAL.particleBurstCount) {
+    // Reduce particle count on mobile for performance
+    const adjustedCount = this.isMobile ? Math.floor(count * 0.5) : count;
+    
     // Simple particle burst
     let emitted = 0;
-    for (let i = 0; i < this.particlePool.length && emitted < count; i++) {
+    for (let i = 0; i < this.particlePool.length && emitted < adjustedCount; i++) {
       const p = this.particlePool[i];
       if (!p.mesh.visible) {
         p.mesh.position.copy(position);
@@ -149,9 +163,9 @@ export class ParticleManager {
   }
 
   createBallBurst(position, color = 0xff0055) {
-    // Explosive burst when ball dies - more particles, higher speed
+    // Explosive burst when ball dies - reduce on mobile
+    const count = this.isMobile ? 15 : 30;
     let emitted = 0;
-    const count = 30; // More particles for explosion
     for (let i = 0; i < this.particlePool.length && emitted < count; i++) {
       const p = this.particlePool[i];
       if (!p.mesh.visible) {
