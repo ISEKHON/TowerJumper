@@ -71,8 +71,8 @@ export class Tower {
     // Actually geometry is fixed 1000. It covers most things.
   }
 
-  addPlatform(y, pattern) {
-    const p = new Platform(this.physicsManager, this.scene, y, pattern, this.theme);
+  addPlatform(y, pattern, isFinish = false) {
+    const p = new Platform(this.physicsManager, this.scene, y, pattern, this.theme, isFinish);
     p.setRotation(this.rotation);
     this.platforms.push(p);
   }
@@ -104,17 +104,96 @@ export class Tower {
   }
   
   addFinishPlatform(y) {
-     // A solid safe platform at the bottom, visual difference maybe?
+     // A solid safe platform at the bottom with green glow
      const pattern = Array(12).fill(TYPE.SAFE);
-     // Green color for finish? 
-     // We'll stick to safe for now, logic handles "Win" by depth or passing all
-     this.addPlatform(y, pattern);
-     this.platforms[this.platforms.length -1].bottom = true;
+     const p = new Platform(this.physicsManager, this.scene, y, pattern, this.theme, true);
+     p.setRotation(this.rotation);
+     p.bottom = true;
+     this.platforms.push(p);
   }
 
   update(dt) {
     // Update rotation of all platforms
     // Logic is centralized here
     this.platforms.forEach(p => p.setRotation(this.rotation));
+  }
+
+  generateDemoTower() {
+    // Special demo tower for testing smash-through mechanics
+    // Creates platforms with aligned gaps for easy consecutive passes
+    console.log('🎮 Demo Tower Generated - Gaps aligned for smash-through testing!');
+    
+    const themeIndex = (this.level - 1) % THEMES.length;
+    this.theme = THEMES[themeIndex];
+    
+    // Update visuals
+    this.poleMat.color.setHex(this.theme.pole);
+    if (this.game) {
+        this.game.updateTheme(this.theme);
+    }
+
+    // Clear existing
+    this.platforms.forEach(p => {
+      this.scene.remove(p.group);
+      p.bodies.forEach(b => this.physicsManager.removeBody(b));
+    });
+    this.platforms = [];
+
+    const startY = 0;
+    const distanceBetween = 5;
+    const platformCount = 25;
+
+    // First platform - safe start with a gap
+    const initialPattern = Array(12).fill(TYPE.SAFE);
+    initialPattern[9] = TYPE.NONE; 
+    initialPattern[10] = TYPE.NONE;
+    this.addPlatform(startY, initialPattern);
+
+    // Create groups of platforms with aligned gaps
+    // This makes it easy to fall through 3-5 platforms consecutively
+    let currentY = startY - distanceBetween;
+    
+    // Pattern: 3-4 platforms with aligned gaps, then 2 safe platforms to land
+    for (let group = 0; group < 5; group++) {
+      const gapAngle = Math.floor(randomRange(0, 12));
+      
+      // 4 platforms with aligned gap (smash-through section)
+      for (let i = 0; i < 4; i++) {
+        const pattern = Array(12).fill(TYPE.SAFE);
+        // Create aligned gap
+        pattern[gapAngle] = TYPE.NONE;
+        pattern[(gapAngle + 1) % 12] = TYPE.NONE;
+        
+        // Add some danger zones away from the gap
+        const dangerCount = 2;
+        for (let d = 0; d < dangerCount; d++) {
+          let hazardIndex = (gapAngle + 4 + Math.floor(randomRange(0, 6))) % 12;
+          if (pattern[hazardIndex] === TYPE.SAFE) {
+            pattern[hazardIndex] = TYPE.DANGER;
+          }
+        }
+        
+        this.addPlatform(currentY, pattern);
+        currentY -= distanceBetween;
+      }
+      
+      // 1-2 landing platforms (solid or small gap)
+      for (let i = 0; i < 2; i++) {
+        const pattern = Array(12).fill(TYPE.SAFE);
+        // Small random gap
+        const landingGap = Math.floor(randomRange(0, 12));
+        pattern[landingGap] = TYPE.NONE;
+        
+        this.addPlatform(currentY, pattern);
+        currentY -= distanceBetween;
+      }
+    }
+    
+    // Final platform
+    const finishPattern = Array(12).fill(TYPE.SAFE);
+    this.addPlatform(currentY, finishPattern);
+    
+    // Update pole
+    this.pole.position.y = currentY / 2;
   }
 }

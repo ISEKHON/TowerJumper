@@ -115,6 +115,7 @@ export class Game {
     });
     
     // DEBUG: Press 'N' key to advance to next level/theme for testing
+    // DEBUG: Press 'D' key to generate demo tower for smash-through testing
     window.addEventListener('keydown', (e) => {
         if (e.key === 'n' || e.key === 'N') {
             const nextLevel = this.tower.level + 1;
@@ -122,6 +123,13 @@ export class Game {
             this.uiManager.updateLevel(nextLevel);
             this.ball.body.position.y = 5;
             this.ball.body.velocity.set(0, 0, 0);
+        }
+        if (e.key === 'd' || e.key === 'D') {
+            this.tower.generateDemoTower();
+            this.uiManager.updateLevel(this.tower.level);
+            this.ball.body.position.y = 5;
+            this.ball.body.velocity.set(0, 0, 0);
+            this.ball.consecutivePasses = 0;
         }
     });
     
@@ -144,7 +152,70 @@ export class Game {
       
       if (!type) return; // Skip if no type defined
       
-      // Always apply bounce force immediately to ensure continuous bouncing
+      // CHECK FOR FINISH PLATFORM FIRST!
+      if (body.userData.parentPlatform && body.userData.parentPlatform.isFinish) {
+          const theme = this.tower.theme;
+          
+          // Epic finish platform destruction
+          this.particleManager.createImpactBurst(
+              this.ball.mesh.position, 
+              0x00ff66, // Green explosion
+              80
+          );
+          
+          // Destroy finish platform with special effect
+          this.destroyFinishPlatform(body.userData.parentPlatform, theme);
+          
+          // Massive camera shake
+          this.cameraController.shake(0.5, 0.4);
+          
+          // Stop ball
+          this.ball.body.velocity.set(0, 0, 0);
+          
+          // Trigger level completion after short delay
+          setTimeout(() => {
+              this.completeLevel();
+          }, 800);
+          
+          return; // Don't do normal collision handling
+      }
+      
+      // SMASH-THROUGH POWER: If passed through 3+ platforms, destroy next platform!
+      if (this.ball.consecutivePasses >= 3) {
+          const theme = this.tower.theme;
+          
+          // Destroy the platform regardless of type
+          if (body.userData.parentPlatform) {
+              // Massive explosion
+              this.particleManager.createImpactBurst(
+                  this.ball.mesh.position, 
+                  theme.particle, 
+                  50
+              );
+              
+              // Platform destruction effect
+              this.destroyPlatform(body.userData.parentPlatform, theme);
+              
+              // Huge camera shake
+              this.cameraController.shake(0.4, 0.3);
+              
+              // Bonus points for destroying platform
+              this.addScore(50 * this.ball.consecutivePasses, true);
+              
+              // RESET combo after using the smash power!
+              this.ball.consecutivePasses = 0;
+              this.combo = 0;
+              this.uiManager.hideCombo();
+              
+              // Keep ball falling - NO BOUNCE
+              // Just dampen the velocity slightly for effect
+              this.ball.body.velocity.y *= 0.8;
+              
+              return; // Don't do normal collision handling
+          }
+      }
+      
+      // Normal collision handling
       const bounceVelocity = GAMEplay.bounceForce;
       
       if (type === TYPE.DANGER) {
@@ -207,6 +278,23 @@ export class Game {
           const speed = Math.abs(this.ball.body.velocity.y);
           if (speed > 5) {
               this.cameraController.shake(0.1, 0.15);
+          }
+          
+          // Smash-through landing impact!
+          if (this.ball.consecutivePasses > 1) {
+              // Big impact burst based on smash count
+              const burstSize = Math.min(this.ball.consecutivePasses * 8, 40);
+              this.particleManager.createImpactBurst(
+                  this.ball.mesh.position, 
+                  theme2.particle, 
+                  burstSize
+              );
+              
+              // Extra camera shake for big smashes
+              this.cameraController.shake(0.3 * Math.min(this.ball.consecutivePasses / 3, 1), 0.25);
+              
+              // Squash ball on impact
+              this.ball.squashOnImpact(this.ball.consecutivePasses);
           }
           
           // Reset consecutive passes (combo is for passing through, not bouncing)
@@ -322,6 +410,24 @@ export class Game {
               // Increment consecutive passes
               this.ball.consecutivePasses++;
               
+              const theme = this.tower.theme;
+              
+              // Small burst effect when passing through gaps
+              const burstPos = new THREE.Vector3(0, p.y, 0);
+              this.particleManager.createImpactBurst(
+                  burstPos, 
+                  theme.particle, 
+                  10 + (this.ball.consecutivePasses * 2)
+              );
+              
+              // Show combo counter growing
+              if (this.ball.consecutivePasses >= 3) {
+                  this.uiManager.showCombo(
+                      this.ball.consecutivePasses, 
+                      this.ball.consecutivePasses * 10
+                  );
+              }
+              
               // Base points
               let points = 10;
               
@@ -339,14 +445,6 @@ export class Game {
               if (this.ball.consecutivePasses > 1) {
                   const smashBonus = this.ball.consecutivePasses * GAMEplay.smashThroughBonus;
                   points += smashBonus;
-                  
-                  // Extra visual feedback
-                  const theme = this.tower.theme;
-                  this.particleManager.createImpactBurst(
-                      this.ball.mesh.position, 
-                      theme.particle, 
-                      this.ball.consecutivePasses * 5
-                  );
               }
               
               this.addScore(points, true);
@@ -412,5 +510,256 @@ export class Game {
          this.ball.setColor(theme.danger);
      }
   }
-}
+  flashPlatform(platform, theme) {
+      // Flash and fade out platform when destroyed during smash-through
+      const originalColors = [];
+      
+      platform.group.children.forEach((mesh, idx) => {
+          if (mesh.material) {
+              // Store original color
+              originalColors[idx] = mesh.material.color.getHex();
+              
+              // Flash white
+              mesh.material.color.setHex(0xffffff);
+              mesh.material.emissive.setHex(0xffffff);
+              mesh.material.emissiveIntensity = 1.0;
+          }
+      });
+      
+      // Animate back and fade out
+      let elapsed = 0;
+      const duration = 0.3;
+      
+      const fadeInterval = setInterval(() => {
+          elapsed += 0.016;
+          const progress = elapsed / duration;
+          
+          if (progress >= 1) {
+              clearInterval(fadeInterval);
+              // Make platform invisible but keep physics
+              platform.group.children.forEach(mesh => {
+                  if (mesh.material) {
+                      mesh.material.opacity = 0.2;
+                      mesh.material.transparent = true;
+                  }
+              });
+              return;
+          }
+          
+          platform.group.children.forEach((mesh, idx) => {
+              if (mesh.material) {
+                  // Fade from white back to original color
+                  mesh.material.color.lerp(
+                      new THREE.Color(originalColors[idx] || theme.safe), 
+                      progress
+                  );
+                  mesh.material.emissive.lerp(
+                      new THREE.Color(theme.particle), 
+                      progress
+                  );
+                  mesh.material.emissiveIntensity = 1.0 * (1 - progress);
+                  mesh.material.opacity = 1 - (progress * 0.8);
+                  mesh.material.transparent = true;
+              }
+          });
+      }, 16);
+  }
+
+  destroyFinishPlatform(platform, theme) {
+      // Epic destruction for finish platform with green effects
+      platform.bodies.forEach(b => this.physicsManager.removeBody(b));
+      platform.bodies = [];
+      
+      const platformPos = new THREE.Vector3(0, platform.y, 0);
+      
+      // Multiple green explosions
+      for (let i = 0; i < 5; i++) {
+          setTimeout(() => {
+              this.particleManager.createImpactBurst(
+                  platformPos, 
+                  0x00ff66, 
+                  50 - i * 5
+              );
+          }, i * 100);
+      }
+      
+      // Animate pieces with green glow
+      platform.group.children.forEach((mesh) => {
+          if (!mesh.material) return;
+          
+          mesh.material = mesh.material.clone();
+          mesh.material.transparent = true;
+          
+          // Bright green flash
+          mesh.material.color.setHex(0x00ff66);
+          mesh.material.emissive.setHex(0x00ff66);
+          mesh.material.emissiveIntensity = 4.0;
+          
+          const originalPos = mesh.position.clone();
+          const angle = Math.random() * Math.PI * 2;
+          const force = 5 + Math.random() * 4;
+          const direction = new THREE.Vector3(
+              Math.cos(angle) * force,
+              Math.random() * 5, // Upward explosion
+              Math.sin(angle) * force
+          );
+          
+          const spinX = (Math.random() - 0.5) * 0.4;
+          const spinY = (Math.random() - 0.5) * 0.4;
+          const spinZ = (Math.random() - 0.5) * 0.4;
+          
+          const startTime = performance.now();
+          const duration = 1000; // Longer for finish
+          
+          const animatePiece = (currentTime) => {
+              const elapsed = currentTime - startTime;
+              const progress = Math.min(elapsed / duration, 1);
+              
+              if (progress >= 1) {
+                  mesh.visible = false;
+                  return;
+              }
+              
+              const easeOut = 1 - Math.pow(1 - progress, 3);
+              
+              mesh.position.x = originalPos.x + direction.x * easeOut;
+              mesh.position.y = originalPos.y + direction.y * easeOut - progress * progress * 3; // Gravity
+              mesh.position.z = originalPos.z + direction.z * easeOut;
+              
+              mesh.rotation.x += spinX;
+              mesh.rotation.y += spinY;
+              mesh.rotation.z += spinZ;
+              
+              // Green glow fade
+              mesh.material.opacity = 1 - progress;
+              mesh.material.emissiveIntensity = 4.0 * (1 - progress);
+              
+              const scale = 1 + progress * 0.5; // Expand
+              mesh.scale.set(scale, scale, scale);
+              
+              requestAnimationFrame(animatePiece);
+          };
+          
+          requestAnimationFrame(animatePiece);
+      });
+  }
+
+  completeLevel() {
+      // Level completion logic
+      const nextLevel = this.tower.level + 1;
+      this.tower.generateLevel(nextLevel);
+      this.uiManager.updateLevel(nextLevel);
+      
+      // Bonus points
+      this.addScore(100 * nextLevel, true);
+      
+      // Reset ball
+      this.ball.body.position.y = 5;
+      this.ball.body.velocity.set(0, 0, 0);
+      this.ball.consecutivePasses = 0;
+      this.combo = 0;
+  }
+
+  destroyPlatform(platform, theme) {
+      // Remove physics bodies IMMEDIATELY so ball falls through
+      platform.bodies.forEach(b => this.physicsManager.removeBody(b));
+      platform.bodies = [];
+      
+      const platformPos = new THREE.Vector3(0, platform.y, 0);
+      
+      // Massive initial burst
+      this.particleManager.createImpactBurst(platformPos, theme.particle, 60);
+      
+      // Secondary bursts with delay for eye-candy
+      setTimeout(() => {
+          this.particleManager.createImpactBurst(platformPos, 0xffffff, 40);
+      }, 80);
+      setTimeout(() => {
+          this.particleManager.createImpactBurst(platformPos, theme.danger || theme.particle, 30);
+      }, 160);
+      
+      // Animate each piece with smooth requestAnimationFrame
+      platform.group.children.forEach((mesh) => {
+          if (!mesh.material) return;
+          
+          // Clone material to avoid sharing issues
+          mesh.material = mesh.material.clone();
+          mesh.material.transparent = true;
+          
+          // Instant white flash
+          const originalColor = mesh.material.color.clone();
+          mesh.material.color.setHex(0xffffff);
+          mesh.material.emissive.setHex(0xffffff);
+          mesh.material.emissiveIntensity = 3.0;
+          
+          // Store original transform
+          const originalPos = mesh.position.clone();
+          const originalRot = mesh.rotation.clone();
+          
+          // Random explosion direction
+          const angle = Math.random() * Math.PI * 2;
+          const force = 4 + Math.random() * 3;
+          const direction = new THREE.Vector3(
+              Math.cos(angle) * force,
+              -2 - Math.random() * 3, // Downward
+              Math.sin(angle) * force
+          );
+          
+          // Random spin speeds
+          const spinX = (Math.random() - 0.5) * 0.3;
+          const spinY = (Math.random() - 0.5) * 0.3;
+          const spinZ = (Math.random() - 0.5) * 0.3;
+          
+          const startTime = performance.now();
+          const duration = 600; // Longer, smoother animation
+          
+          const animatePiece = (currentTime) => {
+              const elapsed = currentTime - startTime;
+              const progress = Math.min(elapsed / duration, 1);
+              
+              if (progress >= 1) {
+                  mesh.visible = false;
+                  return;
+              }
+              
+              // Easing function for smooth motion
+              const easeOut = 1 - Math.pow(1 - progress, 3);
+              
+              // Explosive movement with gravity
+              mesh.position.x = originalPos.x + direction.x * easeOut;
+              mesh.position.y = originalPos.y + direction.y * easeOut;
+              mesh.position.z = originalPos.z + direction.z * easeOut;
+              
+              // Spinning
+              mesh.rotation.x = originalRot.x + spinX * progress * 20;
+              mesh.rotation.y = originalRot.y + spinY * progress * 20;
+              mesh.rotation.z = originalRot.z + spinZ * progress * 20;
+              
+              // Smooth fade: white flash -> original color -> fade out
+              if (progress < 0.2) {
+                  // Flash phase
+                  const flashProgress = progress / 0.2;
+                  mesh.material.color.lerpColors(
+                      new THREE.Color(0xffffff),
+                      originalColor,
+                      flashProgress
+                  );
+                  mesh.material.emissiveIntensity = 3.0 * (1 - flashProgress);
+              } else {
+                  // Fade phase
+                  const fadeProgress = (progress - 0.2) / 0.8;
+                  mesh.material.opacity = 1 - fadeProgress;
+                  mesh.material.emissiveIntensity = 0;
+              }
+              
+              // Scale down slightly for impact
+              const scale = 1 - progress * 0.3;
+              mesh.scale.set(scale, scale, scale);
+              
+              requestAnimationFrame(animatePiece);
+          };
+          
+          requestAnimationFrame(animatePiece);
+      });
+  }}
 

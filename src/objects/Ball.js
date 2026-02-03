@@ -7,6 +7,8 @@ export class Ball {
     this.initialPosition = position;
     this.radius = 0.4;
     this.consecutivePasses = 0; // For smash-through combo
+    this.squashAmount = 0; // For impact animation
+    this.squashRecovery = 0; // Recovery speed
     
     // Mesh
     const geometry = new THREE.SphereGeometry(this.radius, 32, 32);
@@ -66,6 +68,20 @@ export class Ball {
     // Subtle rotation for visual interest
     this.mesh.rotation.x += 0.01;
     this.mesh.rotation.z += 0.01;
+    
+    // Squash animation recovery
+    if (this.squashAmount > 0) {
+      this.squashAmount -= this.squashRecovery;
+      if (this.squashAmount < 0) this.squashAmount = 0;
+      
+      // Apply squash: compress Y, expand X and Z
+      const squash = 1 - this.squashAmount * 0.3;
+      const stretch = 1 + this.squashAmount * 0.15;
+      this.mesh.scale.set(stretch, squash, stretch);
+    } else {
+      // Ensure scale is normalized
+      this.mesh.scale.set(1, 1, 1);
+    }
   }
 
   setColor(color) {
@@ -90,13 +106,21 @@ export class Ball {
     this.setColor(COLORS.ball);
   }
 
+  squashOnImpact(intensity = 1) {
+    // Squash the ball on impact based on intensity
+    this.squashAmount = Math.min(intensity * 0.2, 1.0);
+    this.squashRecovery = 0.08; // Recovery speed per frame
+  }
+
   reset() {
     this.body.position.set(this.initialPosition.x, this.initialPosition.y, this.initialPosition.z + 2.5);
     this.body.velocity.set(0, 0, 0);
     this.body.angularVelocity.set(0, 0, 0);
     this.isDead = false;
     this.consecutivePasses = 0;
+    this.squashAmount = 0;
     this.mesh.visible = true;
+    this.mesh.scale.set(1, 1, 1);
     this.deactivatePowerups();
   }
 }

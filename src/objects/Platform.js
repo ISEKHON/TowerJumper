@@ -9,7 +9,7 @@ export const TYPE = {
 };
 
 export class Platform {
-  constructor(physicsManager, scene, y, pattern, theme = null) {
+  constructor(physicsManager, scene, y, pattern, theme = null, isFinish = false) {
     this.y = y;
     this.pattern = pattern; // Array of types
     this.theme = theme || { safe: 0x333333, danger: 0xff0055 }; // Use theme or fallback
@@ -29,8 +29,14 @@ export class Platform {
     scene.add(this.group);
     
     this.bodies = [];
+    this.isFinish = isFinish; // Mark as finish platform
     
     this.generateMeshesAndColliders();
+    
+    // Add glowing effect for finish platform
+    if (this.isFinish) {
+      this.addFinishGlow();
+    }
   }
 
   generateMeshesAndColliders() {
@@ -74,11 +80,23 @@ export class Platform {
       // We will rotate mesh -90 deg X to flat.
       geometry.rotateX(-Math.PI / 2);
       
-      const color = type === TYPE.DANGER ? this.theme.danger : this.theme.safe;
+      // Use green for finish platform, otherwise use normal colors
+      let color = type === TYPE.DANGER ? this.theme.danger : this.theme.safe;
+      let emissive = 0x000000;
+      let emissiveIntensity = 0;
+      
+      if (this.isFinish) {
+        color = 0x00ff66; // Bright green
+        emissive = 0x00ff66;
+        emissiveIntensity = 0.5;
+      }
+      
       const material = new THREE.MeshStandardMaterial({ 
         color,
-        roughness: 0.8,
-        metalness: 0.2
+        emissive,
+        emissiveIntensity,
+        roughness: 0.6,
+        metalness: 0.4
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.receiveShadow = true;
@@ -161,5 +179,32 @@ export class Platform {
     this.bodies.forEach(body => {
       body.quaternion.copy(quat);
     });
+  }
+
+  addFinishGlow() {
+    // Pulsing glow animation for finish platform
+    let intensity = 0.5;
+    let direction = 1;
+    
+    const pulseInterval = setInterval(() => {
+      intensity += direction * 0.02;
+      
+      if (intensity >= 1.0) {
+        intensity = 1.0;
+        direction = -1;
+      } else if (intensity <= 0.3) {
+        intensity = 0.3;
+        direction = 1;
+      }
+      
+      this.group.children.forEach(mesh => {
+        if (mesh.material && mesh.material.emissive) {
+          mesh.material.emissiveIntensity = intensity;
+        }
+      });
+    }, 50);
+    
+    // Store interval for cleanup
+    this.glowInterval = pulseInterval;
   }
 }
