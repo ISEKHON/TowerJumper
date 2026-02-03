@@ -21,6 +21,7 @@ export class Game {
     this.combo = 0;
     this.comboTimer = 0;
     this.lastPlatformY = 0;
+    this.isCompletingLevel = false; // Prevent multiple level completions
     
     this.initThree();
     this.initPhysics();
@@ -451,24 +452,8 @@ export class Game {
           }
       });
       
-      // Check for level completion and progression
-      const deepestPlatform = this.tower.platforms[this.tower.platforms.length - 1];
-      
-      if (deepestPlatform && ballY < deepestPlatform.y - 10) {
-          // Level complete! Increment level and generate next
-          const nextLevel = this.tower.level + 1;
-          
-          this.tower.generateLevel(nextLevel);
-          this.uiManager.updateLevel(nextLevel);
-          
-          // Bonus points for completing level
-          this.addScore(100 * nextLevel, true);
-          
-          // Reset ball position to top
-          this.ball.body.position.y = 5;
-          this.ball.body.velocity.set(0, 0, 0);
-          this.ball.consecutivePasses = 0;
-      }
+      // Level completion is now handled by finish platform collision
+      // Old automatic completion removed to prevent double-triggering
   }
 
   updateCamera() {
@@ -645,6 +630,10 @@ export class Game {
   }
 
   completeLevel() {
+      // Prevent multiple calls
+      if (this.isCompletingLevel) return;
+      this.isCompletingLevel = true;
+      
       // Level completion logic
       const nextLevel = this.tower.level + 1;
       this.tower.generateLevel(nextLevel);
@@ -658,6 +647,11 @@ export class Game {
       this.ball.body.velocity.set(0, 0, 0);
       this.ball.consecutivePasses = 0;
       this.combo = 0;
+      
+      // Reset flag after a delay
+      setTimeout(() => {
+          this.isCompletingLevel = false;
+      }, 1000);
   }
 
   destroyPlatform(platform, theme) {
