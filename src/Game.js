@@ -115,25 +115,6 @@ export class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     });
     
-    // DEBUG: Press 'N' key to advance to next level/theme for testing
-    // DEBUG: Press 'D' key to generate demo tower for smash-through testing
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'n' || e.key === 'N') {
-            const nextLevel = this.tower.level + 1;
-            this.tower.generateLevel(nextLevel);
-            this.uiManager.updateLevel(nextLevel);
-            this.ball.body.position.y = 5;
-            this.ball.body.velocity.set(0, 0, 0);
-        }
-        if (e.key === 'd' || e.key === 'D') {
-            this.tower.generateDemoTower();
-            this.uiManager.updateLevel(this.tower.level);
-            this.ball.body.position.y = 5;
-            this.ball.body.velocity.set(0, 0, 0);
-            this.ball.consecutivePasses = 0;
-        }
-    });
-    
     // Collision handling
     this.ball.body.addEventListener('collide', (e) => {
         if (!this.isRunning) return;

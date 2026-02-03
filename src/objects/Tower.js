@@ -121,8 +121,6 @@ export class Tower {
   generateDemoTower() {
     // Special demo tower for testing smash-through mechanics
     // Creates platforms with aligned gaps for easy consecutive passes
-    console.log('🎮 Demo Tower Generated - Gaps aligned for smash-through testing!');
-    
     const themeIndex = (this.level - 1) % THEMES.length;
     this.theme = THEMES[themeIndex];
     
