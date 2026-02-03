@@ -32,6 +32,9 @@ export class Game {
     this.rotationSpeed = this.isMobile ? 0.012 : 0.003;
     this.maxRotationSpeed = this.isMobile ? 0.25 : 0.12;
     
+    // Mobile rotation tracking
+    this.baseRotation = 0; // Store rotation at start of drag
+    
     this.initThree();
     this.initPhysics();
     this.initGameObjects();
@@ -360,20 +363,22 @@ export class Game {
       // Only update physics when game is running and not paused
       if (!this.isRunning || this.isPaused) return;
       
-      // Rotate Tower based on input
-      const deltaX = this.inputManager.getDeltaX();
       const isDragging = this.inputManager.getIsDragging();
       
       if (this.isMobile) {
-        // Mobile: Direct rotation tracking finger - NO VELOCITY, NO MOMENTUM
-        if (isDragging && deltaX !== 0) {
-          // Rotate directly with finger movement - simple and immediate
-          this.tower.rotation += deltaX * 0.01;
+        // Mobile: Absolute position tracking
+        if (isDragging) {
+          const totalDrag = this.inputManager.getTotalDrag();
+          // Set rotation to base + total drag distance
+          this.tower.rotation = this.baseRotation + (totalDrag * 0.005);
+        } else {
+          // Save current rotation as base for next drag
+          this.baseRotation = this.tower.rotation;
         }
-        // When not dragging or no movement, do nothing - tower stays put
         this.currentRotationVelocity = 0;
       } else {
-        // Desktop: Smooth velocity-based rotation
+        // Desktop: Velocity-based rotation
+        const deltaX = this.inputManager.getDeltaX();
         this.currentRotationVelocity += deltaX * this.rotationSpeed;
         this.currentRotationVelocity *= GAMEplay.rotationDamping;
         this.currentRotationVelocity = clamp(
