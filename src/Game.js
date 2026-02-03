@@ -18,6 +18,7 @@ export class Game {
     this.score = 0;
     this.highScore = 0;
     this.isRunning = false;
+    this.isPaused = false;
     this.combo = 0;
     this.comboTimer = 0;
     this.lastPlatformY = 0;
@@ -27,7 +28,7 @@ export class Game {
     this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     this.isLowEnd = this.isMobile || navigator.hardwareConcurrency <= 4;
     
-    // Device-specific rotation sensitivity
+    // Device-specific rotation sensitivity (will be overridden by settings)
     this.rotationSpeed = this.isMobile ? 0.012 : 0.003; // Higher on mobile, lower on PC
     this.maxRotationSpeed = this.isMobile ? 0.25 : 0.12; // Higher max on mobile
     
@@ -42,6 +43,10 @@ export class Game {
     this.frameCount = 0;
     this.physicsAccumulator = 0;
     this.fixedTimeStep = 1 / 120; // 120 FPS physics for smoothness
+    
+    // FPS tracking
+    this.fpsFrames = 0;
+    this.fpsLastTime = performance.now();
 
     this.animate = this.animate.bind(this);
     requestAnimationFrame(this.animate);
@@ -352,8 +357,8 @@ export class Game {
   }
 
   updatePhysics(dt) {
-      // Only update physics when game is running
-      if (!this.isRunning) return;
+      // Only update physics when game is running and not paused
+      if (!this.isRunning || this.isPaused) return;
       
       // Rotate Tower based on input
       const deltaX = this.inputManager.getDeltaX();
@@ -492,20 +497,28 @@ export class Game {
       this.physicsAccumulator -= this.fixedTimeStep;
     }
     
-    // Update game logic and visuals at render framerate
-    this.updateGameLogic();
-    this.updateCamera();
-    
-    // Update trail
-    this.ballTrail.update(this.ball.mesh.position);
-    
-    // Update particles
-    this.particleManager.update(dt);
+    // Update game logic and visuals at render framerate (skip if paused)
+    if (!this.isPaused) {
+      this.updateGameLogic();
+      this.updateCamera();
+      
+      // Update trail
+      this.ballTrail.update(this.ball.mesh.position);
+      
+      // Update particles
+      this.particleManager.update(dt);
+    }
 
     this.renderer.render(this.scene, this.camera);
     
-    // Performance monitoring (optional, can comment out in production)
-    this.frameCount++;
+    // FPS tracking
+    this.fpsFrames++;
+    if (time - this.fpsLastTime >= 1000) {
+      const fps = this.fpsFrames / ((time - this.fpsLastTime) / 1000);
+      this.uiManager.updateFPS(fps);
+      this.fpsFrames = 0;
+      this.fpsLastTime = time;
+    }
   }
 
   updateTheme(theme) {

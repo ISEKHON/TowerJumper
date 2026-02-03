@@ -23,11 +23,58 @@
         <div class="level-score"></div>
       </div>
       
+      <!-- Pause Button -->
+      <button id="pause-btn" class="pause-button hidden">⏸</button>
+      
+      <!-- Pause Menu -->
+      <div id="pause-screen" class="screen hidden">
+        <h1>PAUSED</h1>
+        <div class="pause-stats">
+          <p class="pause-stat">Score: <span id="pause-score">0</span></p>
+          <p class="pause-stat">Level: <span id="pause-level">1</span></p>
+        </div>
+        <button id="resume-btn" class="menu-btn">RESUME</button>
+        <button id="settings-btn" class="menu-btn secondary">SETTINGS</button>
+        <button id="quit-btn" class="menu-btn secondary">QUIT TO MENU</button>
+      </div>
+      
+      <!-- Settings Menu -->
+      <div id="settings-screen" class="screen hidden">
+        <h1>SETTINGS</h1>
+        <div class="settings-container">
+          <div class="setting-item">
+            <label for="rotation-sensitivity">Rotation Sensitivity</label>
+            <div class="slider-container">
+              <input type="range" id="rotation-sensitivity" min="1" max="20" value="10" step="1">
+              <span class="slider-value" id="sensitivity-value">10</span>
+            </div>
+          </div>
+          <div class="setting-item">
+            <label for="max-rotation-speed">Max Rotation Speed</label>
+            <div class="slider-container">
+              <input type="range" id="max-rotation-speed" min="5" max="30" value="15" step="1">
+              <span class="slider-value" id="max-speed-value">15</span>
+            </div>
+          </div>
+          <div class="setting-item">
+            <label class="toggle-label">
+              <input type="checkbox" id="show-fps" class="toggle-checkbox">
+              <span>Show FPS Counter</span>
+            </label>
+          </div>
+        </div>
+        <button id="settings-back-btn" class="menu-btn">BACK</button>
+      </div>
+      
+      <!-- FPS Counter -->
+      <div id="fps-counter" class="hidden">60 FPS</div>
+      
       <div id="start-screen" class="screen">
         <h1>TOWER JUMP</h1>
         <p class="screen-subtitle">Drag to Rotate • Avoid Red Zones</p>
         <p class="screen-description">Fall through gaps for combos!</p>
         <button id="start-btn">PLAY</button>
+        <button id="start-settings-btn" class="menu-btn secondary">SETTINGS</button>
       </div>
       <div id="game-over-screen" class="screen hidden">
         <h1>GAME OVER</h1>
@@ -36,6 +83,7 @@
         <p id="final-high-score" class="final-stat-small">Best: 0</p>
         <p id="final-streak" class="final-stat-small" style="display: none;">Max Streak: 0</p>
         <button id="restart-btn">RETRY</button>
+        <button id="game-over-menu-btn" class="menu-btn secondary">MAIN MENU</button>
       </div>
     </div>
     <canvas id="game-canvas"></canvas>
