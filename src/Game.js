@@ -56,12 +56,13 @@ export class Game {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.shadowMap.autoUpdate = true;
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // Clean, atmospheric lighting
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.8);
     this.scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(10, 20, 10);
+    // Main light
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    dirLight.position.set(8, 15, 5);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
@@ -75,9 +76,10 @@ export class Game {
     dirLight.shadow.normalBias = 0.02;
     this.scene.add(dirLight);
 
-    // Hemisphere light for better ambient
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.4);
-    this.scene.add(hemiLight);
+    // Subtle fill light
+    const fillLight = new THREE.DirectionalLight(0x8899ff, 0.3);
+    fillLight.position.set(-5, 5, -5);
+    this.scene.add(fillLight);
   }
 
   initPhysics() {

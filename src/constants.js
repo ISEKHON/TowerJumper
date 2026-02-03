@@ -1,19 +1,19 @@
 export const COLORS = {
-  background: 0xffffff,
-  fog: 0xffffff,
+  background: 0x0a0a0f,
+  fog: 0x0a0a0f,
   ball: 0xff0055,
   platformSafe: 0x333333,
   platformDanger: 0xff0055,
-  pole: 0xcccccc
+  pole: 0x666666
 };
 
 export const THEMES = [
-  { background: 0xffffff, pole: 0xcccccc, safe: 0x333333, danger: 0xff0055, particle: 0xff0055 },
-  { background: 0x222222, pole: 0x444444, safe: 0xeeeeee, danger: 0xffaa00, particle: 0xffaa00 },
-  { background: 0x88ccff, pole: 0xffffff, safe: 0x0055aa, danger: 0xff3333, particle: 0xff3333 },
-  { background: 0xffeebb, pole: 0xaa8855, safe: 0x553311, danger: 0xcc4444, particle: 0xcc4444 },
-  { background: 0x1a1a2e, pole: 0x16213e, safe: 0x0f3460, danger: 0xe94560, particle: 0xe94560 },
-  { background: 0xf0e5cf, pole: 0xc6a15b, safe: 0x8b6f47, danger: 0xd64045, particle: 0xd64045 }
+  { background: 0x0a0a0f, pole: 0x666666, safe: 0x2a2a2f, danger: 0xff3860, particle: 0xff3860 },
+  { background: 0x1a1520, pole: 0x3a2535, safe: 0x2a2028, danger: 0xff6b9d, particle: 0xff6b9d },
+  { background: 0x0d1821, pole: 0x344966, safe: 0x1e2d3d, danger: 0xff5e78, particle: 0xff5e78 },
+  { background: 0x1c1810, pole: 0x4a3f2a, safe: 0x2e2518, danger: 0xff7043, particle: 0xff7043 },
+  { background: 0x0f0f1e, pole: 0x252544, safe: 0x1a1a2e, danger: 0xff4081, particle: 0xff4081 },
+  { background: 0x1a1410, pole: 0x3d3128, safe: 0x2a2018, danger: 0xff5252, particle: 0xff5252 }
 ];
 
 export const PHYSICS = {

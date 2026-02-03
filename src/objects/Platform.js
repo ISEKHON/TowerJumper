@@ -80,23 +80,38 @@ export class Platform {
       // We will rotate mesh -90 deg X to flat.
       geometry.rotateX(-Math.PI / 2);
       
-      // Use green for finish platform, otherwise use normal colors
-      let color = type === TYPE.DANGER ? this.theme.danger : this.theme.safe;
-      let emissive = 0x000000;
-      let emissiveIntensity = 0;
+      // Clean, intentional material design
+      let color, emissive, emissiveIntensity, roughness, metalness;
       
       if (this.isFinish) {
-        color = 0x00ff66; // Bright green
-        emissive = 0x00ff66;
-        emissiveIntensity = 0.5;
+        // Finish platform - subtle green glow
+        color = 0x00dd88;
+        emissive = 0x00ff99;
+        emissiveIntensity = 0.4;
+        roughness = 0.3;
+        metalness = 0.6;
+      } else if (type === TYPE.DANGER) {
+        // Danger - matte with slight glow
+        color = this.theme.danger;
+        emissive = this.theme.danger;
+        emissiveIntensity = 0.2;
+        roughness = 0.5;
+        metalness = 0.3;
+      } else {
+        // Safe - clean dark surface
+        color = this.theme.safe;
+        emissive = 0x000000;
+        emissiveIntensity = 0;
+        roughness = 0.6;
+        metalness = 0.4;
       }
       
       const material = new THREE.MeshStandardMaterial({ 
         color,
         emissive,
         emissiveIntensity,
-        roughness: 0.6,
-        metalness: 0.4
+        roughness,
+        metalness
       });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.receiveShadow = true;
