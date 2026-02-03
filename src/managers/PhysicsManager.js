@@ -14,13 +14,17 @@ export class PhysicsManager {
     const contactMaterial = new CANNON.ContactMaterial(
       this.ballMaterial,
       this.platformMaterial,
-      { friction: 0.0, restitution: 0.95 } // Higher bounce, no friction
+      { friction: 0.0, restitution: 0.2 } // Lower restitution so manual bounce control takes over
     );
 
     this.world.addContactMaterial(contactMaterial);
     
     // Fixed time step
     this.fixedTimeStep = PHYSICS.dt;
+  }
+
+  setGravity(y) {
+    this.world.gravity.set(0, y, 0);
   }
 
   update(dt) {

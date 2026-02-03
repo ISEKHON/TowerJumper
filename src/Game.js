@@ -49,7 +49,8 @@ export class Game {
     
     // Device-specific rotation sensitivity (will be overridden by settings)
     this.rotationSpeed = this.isMobile ? 0.012 : 0.003;
-    this.maxRotationSpeed = this.isMobile ? 0.25 : 0.12;
+    this.maxRotationSpeed = this.isMobile ? 0.25 : 0.12; 
+    this.bounceForce = GAMEplay.bounceForce; // Will be updated by settings
     
     // Mobile rotation tracking
     this.baseRotation = 0; // Store rotation at start of drag
@@ -265,20 +266,22 @@ export class Game {
       }
       
       // Normal collision handling
-      const bounceVelocity = GAMEplay.bounceForce;
+      const bounceVelocity = this.bounceForce; 
       
       if (type === TYPE.DANGER) {
           // Check if ball has shield or fireball
           if (this.ball.hasShield) {
               // Shield absorbs hit
               this.ball.deactivatePowerups();
-              this.ball.body.velocity.y = Math.min(bounceVelocity, GAMEplay.maxBounceForce);
+              const currentMax = Math.max(GAMEplay.maxBounceForce, this.bounceForce * 1.5);
+              this.ball.body.velocity.y = Math.min(bounceVelocity, currentMax);
               this.cameraController.shake(0.1, 0.15);
               this.addScore(10, false);
               return;
           } else if (this.ball.isFireball) {
               // Fireball destroys platform
-              this.ball.body.velocity.y = Math.min(bounceVelocity, GAMEplay.maxBounceForce);
+              const currentMax = Math.max(GAMEplay.maxBounceForce, this.bounceForce * 1.5);
+              this.ball.body.velocity.y = Math.min(bounceVelocity, currentMax);
               this.addScore(20, true);
               
               // Play big explosion sound
@@ -324,20 +327,28 @@ export class Game {
           }
            
            // Check if landing on this platform for the first time
-        //    if (body.userData.parentPlatform && !body.userData.parentPlatform.hasLanded) {
-        //       body.userData.parentPlatform.hasLanded = true;
+           if (body.userData.parentPlatform && !body.userData.parentPlatform.hasLanded) {
+              body.userData.parentPlatform.hasLanded = true;
               
-        //       // Play splash/explosion sound for first landing
-        //       if (this.explosionSound) {
-        //           this.explosionSound.currentTime = 0;
-        //           this.explosionSound.play().catch(e => {});
-        //       }
-        //   }
+              // Play splash/explosion sound for first landing
+              if (this.explosionSound) {
+                  this.explosionSound.currentTime = 0;
+                  this.explosionSound.play().catch(e => {});
+              }
+          }
 
-          // Force velocity to ensure bounce even if physics simulation had dampened it
-          const newVelocity = Math.max(bounceVelocity, this.ball.body.velocity.y + bounceVelocity);
-          // Clamp to maximum to prevent excessive bouncing
-          this.ball.body.velocity.y = Math.min(newVelocity, GAMEplay.maxBounceForce);
+          // CONSISTENT BOUNCE LOGIC
+          // Calculate velocity needed to reach the desired height
+          // v = sqrt(2 * g * h)
+          const gravity = Math.abs(this.physicsManager.world.gravity.y);
+          // Use this.bounceForce as "Target Height" in units. 
+          // Platform gap is 5 units.
+          const targetHeight = this.bounceForce; 
+          
+          const requiredVelocity = Math.sqrt(2 * gravity * targetHeight);
+          
+          // Set velocity directly (overriding physics bounce) for consistency
+          this.ball.body.velocity.y = requiredVelocity;
           
           // Create liquid splatter effect
           if (body.userData.parentPlatform) {
