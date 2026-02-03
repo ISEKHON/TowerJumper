@@ -46,6 +46,10 @@ export class InputManager {
     return d;
   }
 
+  getIsDragging() {
+    return this.isDragging;
+  }
+
   dispose() {
     this.domElement.removeEventListener('pointerdown', this.onPointerDown);
     window.removeEventListener('pointermove', this.onPointerMove);

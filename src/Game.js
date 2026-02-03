@@ -362,21 +362,30 @@ export class Game {
       
       // Rotate Tower based on input
       const deltaX = this.inputManager.getDeltaX();
+      const isDragging = this.inputManager.getIsDragging();
       
-      // Add acceleration with device-specific sensitivity
-      this.currentRotationVelocity += deltaX * this.rotationSpeed;
+      if (this.isMobile && isDragging) {
+        // Direct rotation on mobile - no velocity accumulation
+        // Rotate directly based on drag amount for immediate response
+        this.tower.rotation += deltaX * this.rotationSpeed * 5; // Multiply for more direct control
+        this.currentRotationVelocity = 0; // Reset velocity for clean direct control
+      } else {
+        // Desktop or not dragging - use smooth velocity-based rotation
+        this.currentRotationVelocity += deltaX * this.rotationSpeed;
+        
+        // Apply damping
+        this.currentRotationVelocity *= GAMEplay.rotationDamping;
+        
+        // Clamp with device-specific max speed
+        this.currentRotationVelocity = clamp(
+            this.currentRotationVelocity, 
+            -this.maxRotationSpeed, 
+            this.maxRotationSpeed
+        );
+        
+        this.tower.rotation += this.currentRotationVelocity;
+      }
       
-      // Apply damping
-      this.currentRotationVelocity *= GAMEplay.rotationDamping;
-      
-      // Clamp with device-specific max speed
-      this.currentRotationVelocity = clamp(
-          this.currentRotationVelocity, 
-          -this.maxRotationSpeed, 
-          this.maxRotationSpeed
-      );
-      
-      this.tower.rotation += this.currentRotationVelocity;
       this.tower.update(dt);
       
       this.physicsManager.update(dt);
