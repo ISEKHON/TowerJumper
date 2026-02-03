@@ -24,33 +24,48 @@
       </div>
       
       <!-- Pause Button -->
-      <button id="pause-btn" class="pause-button hidden">⏸</button>
+      <button id="pause-btn" class="pause-button hidden icon-btn">
+        <i data-lucide="pause" class="icon-pause"></i>
+        <i data-lucide="play" class="icon-play hidden"></i>
+      </button>
       
       <!-- Pause Menu -->
-      <div id="pause-screen" class="screen hidden">
-        <h1>PAUSED</h1>
+      <div id="pause-screen" class="screen hidden glass-panel">
+        <h1 class="title-large">PAUSED</h1>
         <div class="pause-stats">
-          <p class="pause-stat">Score: <span id="pause-score">0</span></p>
-          <p class="pause-stat">Level: <span id="pause-level">1</span></p>
+          <div class="stat-card">
+            <i data-lucide="award" class="stat-icon"></i>
+            <div class="stat-info">
+              <span class="stat-label">Score</span>
+              <span id="pause-score" class="stat-value">0</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i data-lucide="layers" class="stat-icon"></i>
+            <div class="stat-info">
+              <span class="stat-label">Level</span>
+              <span id="pause-level" class="stat-value">1</span>
+            </div>
+          </div>
         </div>
-        <button id="resume-btn" class="menu-btn">RESUME</button>
-        <button id="settings-btn" class="menu-btn secondary">SETTINGS</button>
-        <button id="quit-btn" class="menu-btn secondary">QUIT TO MENU</button>
+        <button id="resume-btn" class="menu-btn primary"><i data-lucide="play"></i> RESUME</button>
+        <button id="settings-btn" class="menu-btn secondary"><i data-lucide="settings"></i> SETTINGS</button>
+        <button id="quit-btn" class="menu-btn secondary"><i data-lucide="home"></i> QUIT TO MENU</button>
       </div>
       
       <!-- Settings Menu -->
-      <div id="settings-screen" class="screen hidden">
-        <h1>SETTINGS</h1>
+      <div id="settings-screen" class="screen hidden glass-panel">
+        <h1 class="title-medium">SETTINGS</h1>
         <div class="settings-container">
           <div class="setting-item">
-            <label for="rotation-sensitivity">Rotation Sensitivity</label>
+            <label for="rotation-sensitivity"><i data-lucide="move-horizontal"></i> Sensitivity</label>
             <div class="slider-container">
               <input type="range" id="rotation-sensitivity" min="1" max="20" value="10" step="1">
               <span class="slider-value" id="sensitivity-value">10</span>
             </div>
           </div>
           <div class="setting-item">
-            <label for="max-rotation-speed">Max Rotation Speed</label>
+            <label for="max-rotation-speed"><i data-lucide="zap"></i> Max Speed</label>
             <div class="slider-container">
               <input type="range" id="max-rotation-speed" min="5" max="30" value="15" step="1">
               <span class="slider-value" id="max-speed-value">15</span>
@@ -59,34 +74,46 @@
           <div class="setting-item">
             <label class="toggle-label">
               <input type="checkbox" id="show-fps" class="toggle-checkbox">
-              <span>Show FPS Counter</span>
+              <span class="toggle-text"><i data-lucide="monitor"></i> Show FPS</span>
             </label>
           </div>
         </div>
-        <button id="settings-back-btn" class="menu-btn">BACK</button>
+        <button id="settings-back-btn" class="menu-btn"><i data-lucide="chevron-left"></i> BACK</button>
       </div>
       
       <!-- FPS Counter -->
       <div id="fps-counter" class="hidden">60 FPS</div>
       
-      <div id="start-screen" class="screen">
-        <h1>TOWER JUMP</h1>
+      <div id="start-screen" class="screen glass-panel">
+        <h1 class="title-xl">TOWER<br><span class="accent-text">JUMP</span></h1>
         <p class="screen-subtitle">Drag to Rotate • Avoid Red Zones</p>
-        <p class="screen-description">Fall through gaps for combos!</p>
-        <button id="start-btn">PLAY</button>
-        <button id="start-settings-btn" class="menu-btn secondary">SETTINGS</button>
+        <button id="start-btn" class="menu-btn primary pulse-animation"><i data-lucide="play-circle"></i> PLAY</button>
+        <button id="start-settings-btn" class="menu-btn secondary"><i data-lucide="settings"></i> SETTINGS</button>
       </div>
-      <div id="game-over-screen" class="screen hidden">
-        <h1>GAME OVER</h1>
-        <p id="final-score" class="final-stat">Score: 0</p>
-        <p id="final-level" class="final-stat-small">Level: 1</p>
-        <p id="final-high-score" class="final-stat-small">Best: 0</p>
+      <div id="game-over-screen" class="screen hidden glass-panel">
+        <h1 class="title-large text-danger">GAME OVER</h1>
+        <div class="stats-grid">
+           <div class="stat-box">
+             <span class="stat-label">Score</span>
+             <span id="final-score" class="stat-val">0</span>
+           </div>
+           <div class="stat-box">
+             <span class="stat-label">Level</span>
+             <span id="final-level" class="stat-val">1</span>
+           </div>
+        </div>
+        
+        <p id="final-high-score" class="final-stat-small"><i data-lucide="trophy"></i> Best: 0</p>
         <p id="final-streak" class="final-stat-small" style="display: none;">Max Streak: 0</p>
-        <button id="restart-btn">RETRY</button>
-        <button id="game-over-menu-btn" class="menu-btn secondary">MAIN MENU</button>
+        <div class="action-buttons">
+            <button id="restart-btn" class="menu-btn primary"><i data-lucide="rotate-ccw"></i> RETRY</button>
+            <button id="game-over-menu-btn" class="menu-btn secondary"><i data-lucide="home"></i> MENU</button>
+        </div>
       </div>
     </div>
     <canvas id="game-canvas"></canvas>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -35,6 +35,11 @@ export class UIManager {
     this.fpsLastTime = performance.now();
     
     this.setupEventListeners();
+
+    // Initialize Lucide icons
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
   }
   
   loadSettings() {
@@ -173,14 +178,19 @@ export class UIManager {
     
     this.game.isPaused = !this.game.isPaused;
     
+    const pauseIcon = this.pauseBtn.querySelector('.icon-pause');
+    const playIcon = this.pauseBtn.querySelector('.icon-play');
+
     if (this.game.isPaused) {
       document.getElementById('pause-score').textContent = this.game.score;
       document.getElementById('pause-level').textContent = this.game.tower.level;
       this.pauseScreen.classList.remove('hidden');
-      this.pauseBtn.textContent = '▶';
+      if (pauseIcon) pauseIcon.classList.add('hidden');
+      if (playIcon) playIcon.classList.remove('hidden');
     } else {
       this.pauseScreen.classList.add('hidden');
-      this.pauseBtn.textContent = '⏸';
+      if (pauseIcon) pauseIcon.classList.remove('hidden');
+      if (playIcon) playIcon.classList.add('hidden');
     }
   }
   
