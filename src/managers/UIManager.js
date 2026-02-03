@@ -63,8 +63,6 @@ export class UIManager {
     // Update sliders
     const sensitivitySlider = document.getElementById('rotation-sensitivity');
     const maxSpeedSlider = document.getElementById('max-rotation-speed');
-    const bounceSlider = document.getElementById('bounce-height');
-    const gravitySlider = document.getElementById('gravity-scale');
     const fpsToggle = document.getElementById('show-fps');
     
     if (sensitivitySlider) {
@@ -75,16 +73,6 @@ export class UIManager {
     if (maxSpeedSlider) {
       maxSpeedSlider.value = this.settings.maxRotationSpeed;
       document.getElementById('max-speed-value').textContent = this.settings.maxRotationSpeed;
-    }
-
-    if (bounceSlider) {
-      bounceSlider.value = this.settings.bounceHeight;
-      document.getElementById('bounce-value').textContent = this.settings.bounceHeight;
-    }
-    
-    if (gravitySlider) {
-      gravitySlider.value = this.settings.gravity;
-      document.getElementById('gravity-value').textContent = this.settings.gravity;
     }
     
     if (fpsToggle) {
@@ -101,16 +89,6 @@ export class UIManager {
     } else {
       // Desktop: finer control with mouse
       this.game.rotationSpeed = 0.0025 * sensFactor;
-    }
-
-    // Apply bounce height
-    if (this.settings.bounceHeight) {
-       this.game.bounceForce = this.settings.bounceHeight;
-    }
-
-    // Apply gravity (speed)
-    if (this.settings.gravity) {
-        this.game.physicsManager.setGravity(-this.settings.gravity);
     }
   }
   
@@ -176,24 +154,6 @@ export class UIManager {
       const value = e.target.value;
       document.getElementById('max-speed-value').textContent = value;
       this.settings.maxRotationSpeed = parseInt(value);
-      this.saveSettings();
-      this.applySettings();
-    });
-
-    const bounceSlider = document.getElementById('bounce-height');
-    bounceSlider.addEventListener('input', (e) => {
-      const value = e.target.value;
-      document.getElementById('bounce-value').textContent = value;
-      this.settings.bounceHeight = parseFloat(value);
-      this.saveSettings();
-      this.applySettings();
-    });
-
-    const gravitySlider = document.getElementById('gravity-scale');
-    gravitySlider.addEventListener('input', (e) => {
-      const value = e.target.value;
-      document.getElementById('gravity-value').textContent = value;
-      this.settings.gravity = parseInt(value);
       this.saveSettings();
       this.applySettings();
     });

@@ -17,7 +17,7 @@ export const THEMES = [
 ];
 
 export const PHYSICS = {
-  gravity: -35, // Stronger gravity for faster fall
+  gravity: -40, // Gravity speed - configurable here
   dt: 1 / 60,
   ballMaterial: 'ballMaterial',
   platformMaterial: 'platformMaterial'
@@ -27,7 +27,7 @@ export const GAMEplay = {
   rotationSpeed: 0.005,
   maxRotationSpeed: 0.15,
   rotationDamping: 0.92,
-  bounceForce: 15, // Higher base bounce
+  bounceForce: 3.5, // Bounce height - configurable here
   maxBounceForce: 40, // Allow much higher bouncing
   gapSize: 0.8, // Radians
   comboTimeWindow: 1.5, // seconds
