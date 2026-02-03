@@ -73,13 +73,15 @@ export class UIManager {
       this.fpsCounter.classList.toggle('hidden', !this.settings.showFPS);
     }
     
-    // Apply to game
+    // Apply to game: simple direct drag speed
+    // rotationSensitivity (1-20) scales a base speed differently for mobile vs desktop
+    const sensFactor = this.settings.rotationSensitivity / 10; // 0.1 - 2.0
     if (this.game.isMobile) {
-      this.game.rotationSpeed = (this.settings.rotationSensitivity / 10) * 0.012;
-      this.game.maxRotationSpeed = (this.settings.maxRotationSpeed / 15) * 0.25;
+      // Mobile: higher base so short drags feel responsive
+      this.game.rotationSpeed = 0.008 * sensFactor;
     } else {
-      this.game.rotationSpeed = (this.settings.rotationSensitivity / 10) * 0.003;
-      this.game.maxRotationSpeed = (this.settings.maxRotationSpeed / 15) * 0.12;
+      // Desktop: finer control with mouse
+      this.game.rotationSpeed = 0.0025 * sensFactor;
     }
   }
   

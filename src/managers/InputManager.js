@@ -20,17 +20,26 @@ export class InputManager {
   }
 
   onPointerDown(event) {
+    if (!event.isPrimary) return;
     this.isDragging = true;
     this.previousX = event.clientX;
     this.deltaX = 0;
+    // Prevent browser handling (scrolling, selecting)
+    // event.preventDefault(); 
   }
 
   onPointerMove(event) {
     if (!this.isDragging) return;
+    if (!event.isPrimary) return;
+    
+    // Check if we effectively stopped dragging (no pressure/buttons for mouse)
+    // For touch, buttons might be 0 but touch contact is active.
+    // However, isDragging flag should handle state.
     
     const currentX = event.clientX;
-    this.deltaX = currentX - this.previousX;
+    this.deltaX += currentX - this.previousX; // Accumulate delta
     this.previousX = currentX;
+    // event.preventDefault();
   }
 
   onPointerUp() {
