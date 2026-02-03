@@ -29,8 +29,8 @@ export class Game {
     this.isLowEnd = this.isMobile || navigator.hardwareConcurrency <= 4;
     
     // Device-specific rotation sensitivity (will be overridden by settings)
-    this.rotationSpeed = this.isMobile ? 0.08 : 0.003; // Much higher on mobile for direct control
-    this.maxRotationSpeed = this.isMobile ? 0.5 : 0.12; // Higher max on mobile
+    this.rotationSpeed = this.isMobile ? 0.012 : 0.003;
+    this.maxRotationSpeed = this.isMobile ? 0.25 : 0.12;
     
     this.initThree();
     this.initPhysics();
@@ -366,8 +366,9 @@ export class Game {
       // Add acceleration with device-specific sensitivity
       this.currentRotationVelocity += deltaX * this.rotationSpeed;
       
-      // Apply damping
-      this.currentRotationVelocity *= GAMEplay.rotationDamping;
+      // Apply damping - much less on mobile for continuous rotation while holding
+      const damping = this.isMobile ? 0.98 : GAMEplay.rotationDamping;
+      this.currentRotationVelocity *= damping;
       
       // Clamp with device-specific max speed
       this.currentRotationVelocity = clamp(
