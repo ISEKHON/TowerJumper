@@ -1179,6 +1179,87 @@ button:active {
     100% { transform: scale(1); box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15); }
 }
 
+/* About Screen */
+.about-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 30px 50px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.about-text {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.dev-info {
+  margin-bottom: 25px;
+  text-align: center;
+  position: relative;
+  width: 100%;
+}
+
+.dev-info::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 2px;
+  background: #ff3860;
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(255, 56, 96, 0.5);
+}
+
+.dev-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 2px;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+.dev-name {
+  font-size: 36px;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #fff;
+  text-shadow: 0 2px 20px rgba(165, 180, 252, 0.3);
+  letter-spacing: -1px;
+}
+
+.dev-role {
+  font-size: 16px;
+  color: #a5b4fc;
+  margin: 8px 0 0 0;
+  font-weight: 500;
+}
+
+.about-footer {
+  margin-top: 15px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.3);
+  font-style: italic;
+}
+
 /* --- MOBILE SPECIFIC FIXES --- */
 @media (max-width: 600px) {
     .screen { padding: 15px; }

@@ -10,6 +10,7 @@ export class UIManager {
     this.gameOverScreen = document.getElementById('game-over-screen');
     this.pauseScreen = document.getElementById('pause-screen');
     this.settingsScreen = document.getElementById('settings-screen');
+    this.aboutScreen = document.getElementById('about-screen');
     this.pauseBtn = document.getElementById('pause-btn');
     this.fpsCounter = document.getElementById('fps-counter');
     this.finalScoreEl = document.getElementById('final-score');
@@ -102,6 +103,14 @@ export class UIManager {
     
     document.getElementById('start-settings-btn').addEventListener('click', () => {
       this.showSettings(true);
+    });
+
+    document.getElementById('about-btn').addEventListener('click', () => {
+      this.showAbout();
+    });
+
+    document.getElementById('about-back-btn').addEventListener('click', () => {
+      this.hideAbout();
     });
     
     // Game over screen
@@ -213,6 +222,16 @@ export class UIManager {
     } else {
       this.pauseScreen.classList.remove('hidden');
     }
+  }
+
+  showAbout() {
+    this.startScreen.classList.add('hidden');
+    this.aboutScreen.classList.remove('hidden');
+  }
+
+  hideAbout() {
+    this.aboutScreen.classList.add('hidden');
+    this.startScreen.classList.remove('hidden');
   }
   
   updateFPS(fps) {
