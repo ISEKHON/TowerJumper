@@ -16,6 +16,7 @@ export class InputManager {
     this.domElement.addEventListener('pointerdown', this.onPointerDown);
     window.addEventListener('pointermove', this.onPointerMove);
     window.addEventListener('pointerup', this.onPointerUp);
+    window.addEventListener('pointercancel', this.onPointerUp);
   }
 
   onPointerDown(event) {
@@ -34,12 +35,14 @@ export class InputManager {
 
   onPointerUp() {
     this.isDragging = false;
-    this.deltaX = 0;
+    this.deltaX = 0; // Stop immediately when released
   }
 
   getDeltaX() {
+    // Return current deltaX and reset it
+    // This ensures rotation only happens when actively moving, not just holding
     const d = this.deltaX;
-    this.deltaX = 0; // Consumption based, reset after reading
+    this.deltaX = 0;
     return d;
   }
 
@@ -47,5 +50,6 @@ export class InputManager {
     this.domElement.removeEventListener('pointerdown', this.onPointerDown);
     window.removeEventListener('pointermove', this.onPointerMove);
     window.removeEventListener('pointerup', this.onPointerUp);
+    window.removeEventListener('pointercancel', this.onPointerUp);
   }
 }
