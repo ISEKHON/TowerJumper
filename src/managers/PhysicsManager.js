@@ -6,7 +6,7 @@ export class PhysicsManager {
     this.world = new CANNON.World();
     this.world.gravity.set(0, PHYSICS.gravity, 0);
     this.world.broadphase = new CANNON.SAPBroadphase(this.world);
-    // this.world.solver.iterations = 10;
+    this.world.solver.iterations = 10; // More iterations for stability
 
     this.ballMaterial = new CANNON.Material('ball');
     this.platformMaterial = new CANNON.Material('platform');
@@ -14,7 +14,7 @@ export class PhysicsManager {
     const contactMaterial = new CANNON.ContactMaterial(
       this.ballMaterial,
       this.platformMaterial,
-      { friction: 0.0, restitution: 0.2 } // Lower restitution so manual bounce control takes over
+      { friction: 0.0, restitution: 0.0 } // No physics bounce - full manual control
     );
 
     this.world.addContactMaterial(contactMaterial);

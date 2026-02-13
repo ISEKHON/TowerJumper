@@ -27,7 +27,7 @@ export const GAMEplay = {
   rotationSpeed: 0.005,
   maxRotationSpeed: 0.15,
   rotationDamping: 0.92,
-  bounceForce: 3.5, // Bounce height - configurable here
+  bounceForce: 3.6, // Bounce height - optimized for smooth gameplay
   maxBounceForce: 40, // Allow much higher bouncing
   gapSize: 0.8, // Radians
   comboTimeWindow: 1.5, // seconds

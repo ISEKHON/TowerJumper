@@ -42,15 +42,15 @@ export class Ball {
       mass: 1, // Dynamic
       shape: shape,
       material: physicsManager.ballMaterial,
-      position: new CANNON.Vec3(position.x, position.y, position.z + 2.5)
+      position: new CANNON.Vec3(position.x, position.y, position.z + 2.5),
+      linearDamping: 0.0, // No damping for consistent physics
+      angularDamping: 0.1,
+      fixedRotation: false
     });
     
     // Constrain motion to Y axis only (prevents drifting)
     this.body.linearFactor.set(0, 1, 0);
-
-    // No Damping to ensure consistent bouncing height
-    this.body.linearDamping = 0.0;
-    this.body.angularDamping = 0.1;
+    this.body.angularFactor.set(0, 0, 0); // No rotation for cleaner physics
 
     physicsManager.addBody(this.body);
     

@@ -42,6 +42,7 @@ export class Game {
     this.comboTimer = 0;
     this.lastPlatformY = 0;
     this.isCompletingLevel = false; // Prevent multiple level completions
+    this.stuckTimer = 0; // Track if ball gets stuck
     
     // Detect device capabilities for performance optimization
     this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -168,16 +169,32 @@ export class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     });
     
-    // Collision handling
+    // Collision handling with debouncing
+    this.lastCollisionTime = 0;
+    this.lastCollisionBody = null;
+    
     this.ball.body.addEventListener('collide', (e) => {
         if (!this.isRunning) return;
+        
+        const currentTime = performance.now();
+        
+        // Debounce: Prevent multiple collisions with same body within 100ms
+        if (this.lastCollisionBody === e.body && currentTime - this.lastCollisionTime < 100) {
+            return;
+        }
         
         const contactNormal = new CANNON.Vec3();
         e.contact.ni.negate(contactNormal); // Direction from ball to body
         
-        // More lenient collision detection - accept any upward-ish normal
-        if (contactNormal.y > 0.2 || this.ball.body.velocity.y < 0) {
-             this.handleCollision(e.body);
+        // Strict collision detection - only accept clean top collisions OR when ball is falling
+        const ballVelY = this.ball.body.velocity.y;
+        const isTopCollision = contactNormal.y > 0.7; // Much stricter - must be hitting from top
+        const isFalling = ballVelY < -1; // Ball must be moving down with some speed
+        
+        if (isTopCollision && isFalling) {
+            this.lastCollisionTime = currentTime;
+            this.lastCollisionBody = e.body;
+            this.handleCollision(e.body);
         }
     });
   }
@@ -476,14 +493,19 @@ export class Game {
       this.physicsManager.update(dt);
       this.ball.update();
       
-      // Failsafe: If ball is moving too slowly vertically and is above a platform, give it a push
-      if (this.isRunning && Math.abs(this.ball.body.velocity.y) < 2) {
-          // Check if there's a platform nearby
-          const ballY = this.ball.body.position.y;
-          const nearPlatform = this.tower.platforms.some(p => Math.abs(p.y - ballY) < 1);
-          if (nearPlatform && this.ball.body.velocity.y < 1) {
-              this.ball.body.velocity.y = Math.min(GAMEplay.bounceForce, GAMEplay.maxBounceForce);
+      // Anti-stuck mechanism: If ball has near-zero velocity for too long, reset it
+      const ballSpeed = Math.abs(this.ball.body.velocity.y);
+      if (ballSpeed < 0.5) {
+          if (!this.stuckTimer) this.stuckTimer = 0;
+          this.stuckTimer += dt;
+          
+          // If stuck for more than 0.5 seconds, apply gentle downward force
+          if (this.stuckTimer > 0.5) {
+              this.ball.body.velocity.y = -5; // Gentle push down
+              this.stuckTimer = 0;
           }
+      } else {
+          this.stuckTimer = 0;
       }
   }
   
